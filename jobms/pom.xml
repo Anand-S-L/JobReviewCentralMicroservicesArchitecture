@@ -13,7 +13,6 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>jobms</name>
 	<description>microservice for job application</description>
-
 	<properties>
 		<java.version>17</java.version>
 	</properties>
