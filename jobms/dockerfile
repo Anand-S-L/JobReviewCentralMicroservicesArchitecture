@@ -1,0 +1,4 @@
+FROM eclipse-temurin:17-jdk-alpine
+VOLUME /tmp
+COPY target/*.jar jobAapp.jar
+ENTRYPOINT ["java","-jar","/jobApp.jar"]
