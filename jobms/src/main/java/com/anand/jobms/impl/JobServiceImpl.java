@@ -4,9 +4,14 @@ package com.anand.jobms.impl;
 import com.anand.jobms.Job;
 import com.anand.jobms.JobRepository;
 import com.anand.jobms.JobService;
-import com.anand.jobms.dto.JobWithCompanyDTO;
+import com.anand.jobms.dto.JobDTO;
 import com.anand.jobms.external.Company;
+import com.anand.jobms.external.Review;
+import com.anand.jobms.mapper.JobMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,18 +23,18 @@ import java.util.stream.Collectors;
 public class JobServiceImpl implements JobService {
     @Autowired
     JobRepository jobRepository;
+    @Autowired
+    RestTemplate restTemplate;
 
-    private JobWithCompanyDTO convertToDto(Job job) {
-        JobWithCompanyDTO jobWithCompanyDTO = new JobWithCompanyDTO();
-        jobWithCompanyDTO.setJob(job);
-        RestTemplate restTemplate = new RestTemplate();
-        Company company = restTemplate.getForObject("http://localhost:8083/companies/" + job.getCompanyId(), Company.class);
-        jobWithCompanyDTO.setCompany(company);
-        return jobWithCompanyDTO;
+    private JobDTO convertToDto(Job job) {
+        Company company = restTemplate.getForObject("http://COMPANY-SERVICE:8083/companies/" + job.getCompanyId(), Company.class);
+        ResponseEntity<List<Review>> reviewResponse=restTemplate.exchange("http://REVIEW-SERVICE:8084/reviews?companyId=" + job.getCompanyId(), HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {});
+        List<Review> reviewList = reviewResponse.getBody();
+        return JobMapper.mapToJobDto(job,company,reviewList);
     }
 
     @Override
-    public List<JobWithCompanyDTO> findAll() {
+    public List<JobDTO> findAll() {
         return jobRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -39,8 +44,9 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Job searcById(Long id) {
-        return jobRepository.findById(id).orElse(null);
+    public JobDTO searcById(Long id) {
+        Job job = jobRepository.findById(id).orElse(null);
+        return convertToDto(job);
     }
 
     @Override
