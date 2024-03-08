@@ -4,13 +4,13 @@ package com.anand.jobms.impl;
 import com.anand.jobms.Job;
 import com.anand.jobms.JobRepository;
 import com.anand.jobms.JobService;
+import com.anand.jobms.clients.ReviewClient;
+import com.anand.jobms.clients.CompanyClient;
 import com.anand.jobms.dto.JobDTO;
 import com.anand.jobms.external.Company;
 import com.anand.jobms.external.Review;
 import com.anand.jobms.mapper.JobMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -25,12 +25,15 @@ public class JobServiceImpl implements JobService {
     JobRepository jobRepository;
     @Autowired
     RestTemplate restTemplate;
+    @Autowired
+    private CompanyClient CompanyClient;
+    @Autowired
+    private ReviewClient reviewClient;
 
     private JobDTO convertToDto(Job job) {
-        Company company = restTemplate.getForObject("http://COMPANY-SERVICE:8083/companies/" + job.getCompanyId(), Company.class);
-        ResponseEntity<List<Review>> reviewResponse=restTemplate.exchange("http://REVIEW-SERVICE:8084/reviews?companyId=" + job.getCompanyId(), HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {});
-        List<Review> reviewList = reviewResponse.getBody();
-        return JobMapper.mapToJobDto(job,company,reviewList);
+        Company company = CompanyClient.getCompany(job.getCompanyId());
+        List<Review> reviewResponse=reviewClient.getReviews(job.getCompanyId());
+        return JobMapper.mapToJobDto(job,company,reviewResponse);
     }
 
     @Override
