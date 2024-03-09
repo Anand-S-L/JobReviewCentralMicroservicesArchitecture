@@ -3,6 +3,7 @@ package com.anand.jobms;
 
 import com.anand.jobms.dto.JobDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,6 @@ import java.util.List;
 public class JobController {
     @Autowired
     private JobService jobService;
-
     @GetMapping
     public ResponseEntity<List<JobDTO>> findAll() {
         return ResponseEntity.ok(jobService.findAll());
